@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Smart Trends - Home</title>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js CDN for 3D animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Color Variables (Refined) */
+        :root {
+            --primary-dark: #2c3e50; /* Dark Blue-Gray for header/footer */
+            --secondary-accent: #e74c3c; /* Soft Red for CTA/Highlights */
+            --text-dark: #34495e; /* Dark text for main content */
+            --text-light: #ecf0f1; /* Light text on dark backgrounds */
+            --light-bg: #f8f9fa; /* Very light gray for main background */
+            --card-bg: #ffffff; /* White for cards */
+            --border-light: #e0e0e0; /* Light border */
+            --button-primary: #3498db; /* Blue for primary buttons */
+            --button-hover: #2980b9;
+            --button-danger: #e74c3c;
+            --button-danger-hover: #c0392b;
+            --button-success: #27ae60;
+            --button-success-hover: #229954;
+            --shadow-light: rgba(0, 0, 0, 0.08);
+            --shadow-medium: rgba(0, 0, 0, 0.15);
+            --shadow-strong: rgba(0, 0, 0, 0.25);
+        }
+
+        /* General styles */
+        body {
+            font-family: 'Inter', sans-serif; /* Applied Inter font */
+            background-color: var(--light-bg); /* Uniform light background */
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark); /* Default text color for body content */
+            min-height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            grid-template-areas:
+                "header"
+                "main"
+                "footer";
+            -webkit-font-smoothing: antialiased; /* Smoother font rendering */
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden; /* Prevent horizontal scroll from 3D canvas */
+        }
+
+        /* 3D Canvas Styles */
+        #threeJsCanvas {
+            position: fixed; /* Fixed position to cover the background */
+            top: 0;
+            left: 0;
+            width: 100vw; /* Full viewport width */
+            height: 100vh; /* Full viewport height */
+            z-index: -1; /* Place behind all other content */
+            display: block; /* Ensure it's a block element */
+            background-color: transparent; /* Allows main body background to show through initially */
+        }
+
+        /* Ensure content layers are above the 3D background */
+        .greeting-container,
+        .navbar,
+        .filter-and-search-wrapper,
+        .container,
+        #profileModal {
+            position: relative; /* Ensure these elements respect z-index */
+            z-index: 1; /* Keep them above the 3D canvas */
+        }
+
+        /* Give main content areas a background to obscure the 3D scene behind them */
+        .filter-and-search-wrapper,
+        .container {
+            /* Adjusted background color to have transparency */
+            background-color: rgba(248, 249, 250, 0.85); /* var(--light-bg) with 85% opacity */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); /* Slightly adjusted shadow for transparency */
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            grid-area: header;
+            background-color: var(--primary-dark); /* Dark background for navbar */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%; /* Adjusted padding */
+            color: var(--text-light);
+            box-shadow: 0 2px 8px var(--shadow-medium); /* Softer shadow */
+        }
+
+        .navbar .logo {
+            font-size: 1.8rem; /* Slightly smaller, more refined logo */
+            font-weight: 700;
+            color: var(--text-light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        .navbar .logo img {
+            height: 30px; /* Adjusted logo image size */
+            margin-right: 8px;
+            border-radius: 4px; /* Slight rounded corners for logo image */
+        }
+
+        .navbar nav {
+            display: flex;
+            gap: 1.5rem; /* Adjusted gap */
+            align-items: center; /* Align items in nav */
+        }
+
+        .navbar nav a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: color 0.3s ease, transform 0.2s ease; /* Added transform for hover */
+            padding: 5px 0; /* Adjusted padding */
+        }
+
+        .navbar nav a:hover {
+            color: var(--secondary-accent); /* Accent color on hover */
+            transform: translateY(-2px) scale(1.05); /* Subtle lift and slight scale on hover */
+        }
+
+        .navbar .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .navbar .dropbtn {
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 8px 14px;
+            border-radius: 6px; /* Softer rounded corners */
+            transition: background-color 0.3s ease, box-shadow 0.2s ease, transform 0.2s ease; /* Added transform */
+            font-weight: 500;
+        }
+
+        .navbar .dropbtn:hover {
+            background-color: #3f5168; /* Slightly lighter dark on hover */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transform: translateY(-2px); /* Subtle lift */
+        }
+
+        .navbar .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--primary-dark); /* Consistent background */
+            min-width: 160px;
+            z-index: 101; /* Higher z-index */
+            box-shadow: 0px 6px 16px var(--shadow-medium); /* More pronounced shadow */
+            border-radius: 8px;
+            overflow: hidden; /* Ensures rounded corners on children */
+            animation: fadeInScale 0.2s ease-out; /* Animation for dropdown */
+        }
+
+        .navbar .dropdown-content a {
+            color: var(--text-light);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 0.95rem; /* Slightly smaller font */
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Added transform */
+        }
+
+        .navbar .dropdown-content a:hover {
+            background-color: var(--secondary-accent); /* Accent color on hover */
+            transform: translateX(5px); /* Slide right effect */
+        }
+
+        .navbar .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Greeting Container */
+        .greeting-container {
+            background-color: #e0f2f7; /* Soft light blue */
+            padding: 8px 0;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 4px var(--shadow-light);
+            overflow: hidden; /* Ensure marquee content stays within */
+        }
+
+        .greeting-container marquee {
+            color: var(--text-dark); /* Dark text on light background */
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Filter and Search Wrapper */
+        .filter-and-search-wrapper {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            justify-content: center;
+            align-items: center;
+            gap: 15px; /* Reduced gap between search and categories */
+            padding: 25px; /* More padding */
+            border-radius: 12px; /* Soft rounded corners */
+            margin: 20px auto; /* Center with margin */
+            max-width: 1200px; /* Max width to contain */
+            animation: slideInFromTop 0.5s ease-out; /* Animation for search/filter section */
+        }
+
+        .search-bar-new {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-grow: 1;
+            max-width: 500px;
+        }
+
+        .search-input {
+            padding: 12px 18px;
+            flex-grow: 1;
+            border: 1px solid var(--border-light);
+            border-radius: 28px;
+            font-size: 1rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            color: var(--text-dark);
+            background-color: var(--light-bg);
+        }
+
+        .search-input::placeholder {
+            color: #888;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--button-primary);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1), 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .search-button {
+            padding: 12px 25px;
+            background-color: var(--button-primary);
+            color: var(--text-light);
+            border: none;
+            border-radius: 28px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 3px 8px rgba(0,123,255,0.2);
+        }
+
+        .search-button:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 5px 12px rgba(0,123,255,0.3);
+        }
+
+        /* Voice search button styles */
+        #voiceSearchButton {
+            background-color: var(--secondary-accent);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 3px 8px rgba(231, 76, 60, 0.2);
+            flex-shrink: 0;
+        }
+
+        #voiceSearchButton:hover {
+            background-color: #c0392b;
+            transform: scale(1.08);
+            box-shadow: 0 5px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        /* Animation for listening state */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        #voiceSearchButton.listening {
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Speech feedback display */
+        #speechFeedback {
+            color: var(--text-dark);
+            margin-top: 10px;
+            font-size: 1rem;
+            font-style: italic;
+            height: 25px;
+            line-height: 25px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .category-filter-new {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-dark);
+        }
+
+        .category-filter-new label {
+            font-weight: 600;
+        }
+
+        .category-select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-light);
+            border-radius: 25px;
+            font-size: 1rem;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%2334495e" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            cursor: pointer;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+        }
+
+        .category-select:focus {
+            outline: none;
+            border-color: var(--button-primary);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1), 0 0 0 3px rgba(52, 152, 219, 0.2);
+            transform: scale(1.01);
+        }
+
+        /* Product Listing */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 15px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-dark);
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            animation: fadeIn 1s ease-out;
+        }
+
+        #products {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+        }
+
+        .product {
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            width: 300px;
+            background-color: var(--card-bg);
+            box-shadow: 0 8px 20px var(--shadow-light);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInSlideUp 0.5s ease-out forwards;
+            animation-delay: var(--delay);
+        }
+
+        .product:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px var(--shadow-strong);
+            border-color: var(--secondary-accent);
+        }
+
+        .product img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .product:hover img {
+            transform: scale(1.03);
+        }
+
+        .product h3 {
+            margin: 10px 0 5px;
+            color: var(--text-dark);
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .product p {
+            color: var(--text-dark);
+            margin: 5px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .product strong {
+            font-size: 1.2rem;
+            color: var(--secondary-accent);
+            font-weight: 700;
+            margin-top: 10px;
+            display: block;
+        }
+
+        .product button {
+            margin-top: 15px;
+            background-color: var(--button-success);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 6px rgba(39, 174, 96, 0.2);
+        }
+
+        .product button:hover {
+            background-color: var(--button-success-hover);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
+        }
+
+        .product .remove-btn {
+            background-color: var(--button-danger);
+            margin-left: 10px;
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.2);
+        }
+
+        .product .remove-btn:hover {
+            background-color: var(--button-danger-hover);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+        }
+
+        .quantity-display {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Profile Modal */
+        #profileModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #profileModalContent {
+            background: var(--card-bg);
+            padding: 30px;
+            width: 450px;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            color: var(--text-dark);
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        /* Animation keyframes */
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes fadeOutScale {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.9); }
+        }
+
+        @keyframes slideInFromTop {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+
+        #profileModalContent h2 {
+            color: var(--primary-dark);
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        #profileModalContent label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        #profileModalContent input {
+            width: calc(100% - 24px);
+            padding: 12px;
+            margin-bottom: 20px;
+            background-color: var(--light-bg);
+            border: 1px solid var(--border-light);
+            color: var(--text-dark);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #profileModalContent input:focus {
+            outline: none;
+            border-color: var(--button-primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        #profileModalContent button {
+            padding: 12px 20px;
+            background-color: var(--button-primary);
+            color: white;
+            border-radius: 6px;
+            margin-top: 15px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #profileModalContent button:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        #profileModalContent button[type="button"] {
+            background-color: #95a5a6;
+            margin-left: 10px;
+        }
+
+        #profileModalContent button[type="button"]:hover {
+            background-color: #7f8c8d;
+        }
+
+        /* Go to Cart Button (within navbar) */
+        .navbar .go-cart-btn {
+            background-color: #f39c12;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.95rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 3px 8px rgba(243, 156, 18, 0.3);
+            font-weight: 600;
+            margin-left: 1.5rem;
+            position: unset;
+            top: unset;
+            right: unset;
+            margin-top: unset;
+            margin-bottom: unset;
+        }
+
+        .navbar .go-cart-btn:hover {
+            background-color: #e67e22;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 5px 12px rgba(243, 156, 18, 0.4);
+        }
+
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .filter-and-search-wrapper {
+                margin: 20px;
+            }
+            .product {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 5%;
+            }
+            .navbar nav {
+                gap: 1rem;
+                justify-content: center;
+                width: 100%;
+            }
+            .navbar .logo {
+                font-size: 1.6rem;
+            }
+            .navbar .dropbtn {
+                font-size: 16px;
+                padding: 6px 10px;
+            }
+            .navbar .go-cart-btn {
+                margin-left: 0;
+                width: 100%;
+                padding: 10px 15px;
+                font-size: 1rem;
+                margin-top: 10px;
+            }
+            .filter-and-search-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+                padding: 15px;
+                margin: 15px;
+            }
+            .search-bar-new {
+                flex-direction: row;
+                width: 100%;
+                gap: 8px;
+            }
+            .search-input {
+                width: calc(100% - 115px);
+                padding: 10px 15px;
+            }
+            .search-button, #voiceSearchButton {
+                width: auto;
+                flex-shrink: 0;
+                padding: 10px 15px;
+                font-size: 0.95rem;
+            }
+            #voiceSearchButton {
+                width: 42px;
+                height: 42px;
+            }
+            .category-filter-new {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+                gap: 5px;
+            }
+            .category-select {
+                width: 100%;
+                padding: 8px 12px;
+            }
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 30px;
+            }
+            .product {
+                width: 100%;
+                margin: 15px 0;
+            }
+            #profileModalContent {
+                width: 90%;
+                margin: 5% auto;
+                padding: 20px;
+            }
+            #profileModalContent input {
+                width: calc(100% - 20px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 10px 15px;
+            }
+            .navbar .logo {
+                font-size: 1.5rem;
+            }
+            .navbar nav a {
+                font-size: 0.9rem;
+                margin: 0 10px;
+            }
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 20px;
+            }
+            .product {
+                padding: 15px;
+            }
+            .navbar .go-cart-btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            .search-input {
+                width: calc(100% - 100px);
+                font-size: 0.9rem;
+            }
+            .search-button, #voiceSearchButton {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+            #voiceSearchButton {
+                width: 38px;
+                height: 38px;
+            }
+            .greeting-container marquee {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D Canvas will be rendered here -->
+    <canvas id="threeJsCanvas"></canvas>
+
+    <div class="greeting-container">
+        <marquee behavior="scroll" direction="right">
+            <span id="greetingMessage"></span>
+        </marquee>
+    </div>
+    <div class="navbar">
+        <a href="home.html" class="logo">
+            <!-- Fallback for logo image: if the main image fails, a gray placeholder will show -->
+            <img src="https://template.canva.com/EAE3xvLG3f0/1/0/1600w-t7t958DYPEk.jpg" alt="Smart Trends New Logo" onerror="this.onerror=null;this.src='https://placehold.co/30x30/34495e/ecf0f1?text=ST';">
+            Smart Trends
+        </a>
+        <nav>
+            <a href="home.html">Home</a>
+            <a href="#" onclick="goToCart()">Cart</a>
+            <a href="order-history.html">Order History</a>
+            <div class="dropdown">
+                <button class="dropbtn">Profile ▼</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="openProfileModal()">Update Profile</a>
+                    <a href="#" onclick="logout()">Logout</a>
+                </div>
+            </div>
+            <!-- Proceed to Cart button moved here, inside the <nav> -->
+            <button onclick="goToCart()" class="go-cart-btn">Proceed to Cart</button>
+        </nav>
+    </div>
+
+    <div class="filter-and-search-wrapper">
+        <div class="search-bar-new">
+            <input type="text" id="searchInput" placeholder="Search products..." class="search-input" />
+            <button onclick="filterProducts()" class="search-button">Search</button>
+            <!-- Voice search button HTML -->
+            <button id="voiceSearchButton" title="Start voice search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </button>
+        </div>
+        <!-- Feedback for speech recognition moved below the search bar for better visibility -->
+        <div id="speechFeedback"></div>
+
+        <div class="category-filter-new">
+            <label for="categorySelect">Select Category:</label>
+            <select id="categorySelect" onchange="filterProductsByCategory()" class="category-select">
+                <option value="">All Categories</option>
+                <option value="Mens wear">Mens wear</option>
+                <option value="Women's wear">Women's wear</option>
+                <option value="watches">watches</option>
+                <option value="groceries">groceries</option>
+                <option value="electronics">electronics</option>
+                <option value="Sports">Sports</option>
+                <option value="Furniture">Furniture</option>
+                <option value="Toys">Toys</option>
+                <option value="Handlooms">Handlooms</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Smart Trends Products</h1>
+        <div id="products"></div>
+    </div>
+
+    <div id="profileModal">
+        <div id="profileModalContent">
+            <h2>Update Profile</h2>
+            <form id="updateProfileForm">
+                <label>Email:</label>
+                <input type="email" id="email" readonly />
+                <label>Name:</label>
+                <input type="text" id="name" required />
+                <label>New Password:</label>
+                <input type="password" id="password" />
+                <button type="submit">Update</button>
+                <button type="button" onclick="closeProfileModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allProducts = [];
+        const userId = localStorage.getItem("userId");
+        const userEmail = localStorage.getItem("userEmail");
+
+        // Redirect to login if not authenticated
+        if (!userId || !userEmail) {
+            window.location.href = "login.html"; // Redirect to the login page
+        }
+
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.value = userEmail;
+        }
+
+        window.onload = function () {
+            const userName = localStorage.getItem("name");
+            const greetingMessage = document.getElementById('greetingMessage');
+            if (greetingMessage) {
+                greetingMessage.textContent = userName
+                    ? `Hello, ${userName}! Welcome to the E-commerce Portal.`
+                    : `Hello, welcome to the E-commerce Portal!`;
+            }
+
+            // Stagger animation for product cards
+            const productCards = document.querySelectorAll('.product');
+            productCards.forEach((card, index) => {
+                card.style.setProperty('--delay', `${index * 0.1}s`); // Stagger by 0.1s
+            });
+
+            // Initialize and animate 3D scene after window loads
+            init3D();
+            animate3D();
+        };
+
+        function goToCart() {
+            if (!userId) {
+                alert("User ID not found. Please login or refresh.");
+                return;
+            }
+            window.location.href = `cart.html?userId=${userId}`;
+        }
+
+        function openProfileModal() {
+            const profileModal = document.getElementById("profileModal");
+            const profileModalContent = document.getElementById("profileModalContent");
+            profileModal.style.display = "flex";
+            profileModalContent.style.animation = "fadeInScale 0.3s ease-out forwards"; // Apply entry animation
+        }
+
+        function closeProfileModal() {
+            const profileModal = document.getElementById("profileModal");
+            const profileModalContent = document.getElementById("profileModalContent");
+            profileModalContent.style.animation = "fadeOutScale 0.3s ease-in forwards"; // Apply exit animation
+            profileModalContent.addEventListener('animationend', function handler() {
+                profileModal.style.display = "none";
+                profileModalContent.removeEventListener('animationend', handler); // Clean up listener
+            });
+        }
+
+        function logout() {
+            alert("Logged out successfully!");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("userEmail");
+            localStorage.removeItem("name");
+            window.location.href = "login.html";
+        }
+
+        document.getElementById("updateProfileForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const updatedUser = {
+                email: document.getElementById("email").value,
+                name: document.getElementById("name").value,
+                password: document.getElementById("password").value
+            };
+
+            if (updatedUser.password === "") {
+                delete updatedUser.password;
+            }
+
+            fetch("/api/cart/update", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedUser)
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.text().then(text => { throw new Error(text || 'Update failed'); });
+                }
+                if (updatedUser.name) {
+                    localStorage.setItem("name", updatedUser.name);
+                    const greetingMessage = document.getElementById('greetingMessage');
+                    if (greetingMessage) {
+                        greetingMessage.textContent = `Hello, ${updatedUser.name}! Welcome to the E-commerce Portal.`;
+                    }
+                }
+                alert("Profile updated successfully!");
+                closeProfileModal();
+            })
+            .catch(err => alert("Error updating profile: " + err.message));
+        });
+
+        const productQuantities = {};
+
+        function displayProducts(products) {
+            const container = document.getElementById('products');
+            container.innerHTML = '';
+
+            if (products.length === 0) {
+                container.innerHTML = '<p style="color: black; text-align: center; width: 100%;">No products found matching your search.</p>';
+                return;
+            }
+
+            products.forEach((product, index) => {
+                if (productQuantities[product.id] === undefined) {
+                    productQuantities[product.id] = 0;
+                }
+
+                const productCard = document.createElement('div');
+                productCard.className = 'product';
+                productCard.style.setProperty('--delay', `${index * 0.1}s`); // Apply staggered delay here
+
+                const imageUrl = product.imageUrl && product.imageUrl.startsWith('http')
+                    ? product.imageUrl
+                    : `https://placehold.co/200x200/e0e0e0/34495e?text=No+Image`;
+
+
+                productCard.innerHTML = `
+                    <img src="${imageUrl}" alt="${product.name}" onerror="this.onerror=null;this.src='https://placehold.co/200x200/e0e0e0/34495e?text=Image+Error';"/>
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <p><strong>₹${product.price}</strong></p>
+                    <p id="qty-${product.id}" class="quantity-display">Quantity: ${productQuantities[product.id]}</p>
+                `;
+
+                const addButton = document.createElement('button');
+                addButton.textContent = "Add to Cart";
+                addButton.addEventListener('click', () => addToCart(product.id));
+                productCard.appendChild(addButton);
+
+                const removeButton = document.createElement('button');
+                removeButton.textContent = "Remove from Cart";
+                removeButton.classList.add("remove-btn");
+                removeButton.addEventListener('click', () => removeFromCart(product.id));
+                productCard.appendChild(removeButton);
+
+                container.appendChild(productCard);
+            });
+        }
+
+        function filterProductsByCategory() {
+            const category = document.getElementById('categorySelect').value;
+            let filteredProducts = allProducts;
+
+            if (category) {
+                filteredProducts = allProducts.filter(product => product.category === category);
+            }
+
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            if (keyword) {
+                 filteredProducts = filteredProducts.filter(product =>
+                    product.name.toLowerCase().includes(keyword) ||
+                    product.description.toLowerCase().includes(keyword)
+                );
+            }
+
+            displayProducts(filteredProducts);
+        }
+
+        function addToCart(productId) {
+            productQuantities[productId]++;
+            updateQuantityUI(productId);
+
+            fetch('/api/cart/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, productId, quantity: productQuantities[productId] })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to add to cart");
+                return res.text();
+            })
+            .then(msg => {
+                console.log("Add to cart success:", msg);
+            })
+            .catch(error => alert("Error adding to cart: " + error.message));
+        }
+
+        function removeFromCart(productId) {
+            if (productQuantities[productId] > 0) {
+                productQuantities[productId]--;
+                updateQuantityUI(productId);
+
+                fetch('/api/cart/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, productId })
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to remove from cart");
+                    return res.text();
+                })
+            .then(msg => {
+                console.log("Remove from cart success:", msg);
+            })
+            .catch(error => alert("Error removing from cart: " + error.message));
+        }
+        }
+
+        function updateQuantityUI(productId) {
+            const qtyElement = document.getElementById(`qty-${productId}`);
+            if (qtyElement) {
+                qtyElement.textContent = `Quantity: ${productQuantities[productId]}`;
+            }
+        }
+
+        // Main filter function that handles both keyword and category
+        function filterProducts() {
+            const category = document.getElementById('categorySelect').value;
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allProducts;
+
+            if (category) {
+                filtered = filtered.filter(product => product.category === category);
+            }
+
+            if (keyword) {
+                filtered = filtered.filter(product =>
+                    product.name.toLowerCase().includes(keyword) ||
+                    product.description.toLowerCase().includes(keyword)
+                );
+            }
+            displayProducts(filtered);
+        }
+
+        fetch('/api/products')
+            .then(response => response.json())
+            .then(products => {
+                allProducts = products;
+                displayProducts(products);
+            })
+            .catch(err => console.error('Failed to load products:', err));
+
+
+        // --- Voice Search Functionality ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const voiceSearchButton = document.getElementById('voiceSearchButton');
+        const speechFeedback = document.getElementById('speechFeedback');
+        const searchInput = document.getElementById('searchInput');
+
+        voiceSearchButton.style.display = 'flex'; // Ensure button is visible
+
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                speechFeedback.textContent = 'Listening... Speak now.';
+                voiceSearchButton.classList.add('listening');
+            };
+
+            recognition.onresult = (event) => {
+                const speechResult = event.results[0][0].transcript;
+                searchInput.value = speechResult;
+                speechFeedback.textContent = `Recognized: "${speechResult}"`;
+                filterProducts(); // Trigger search with recognized text
+            };
+
+            recognition.onend = () => {
+                speechFeedback.textContent = '';
+                voiceSearchButton.classList.remove('listening');
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                let errorMessage = 'Speech recognition error. Please try again.';
+                if (event.error === 'not-allowed') {
+                    errorMessage = 'Microphone access denied. Please allow microphone in browser settings.';
+                } else if (event.error === 'no-speech') {
+                    errorMessage = 'No speech detected. Please try again.';
+                } else if (event.error === 'aborted') {
+                    errorMessage = 'Speech recognition cancelled.';
+                }
+                speechFeedback.textContent = `Error: ${errorMessage}`;
+                voiceSearchButton.classList.remove('listening');
+            };
+
+            voiceSearchButton.addEventListener('click', () => {
+                speechFeedback.textContent = '';
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error('Error starting speech recognition:', e);
+                    speechFeedback.textContent = 'Error: Speech recognition already in progress or not allowed.';
+                }
+            });
+
+        } else {
+            voiceSearchButton.disabled = true;
+            voiceSearchButton.style.opacity = '0.5';
+            voiceSearchButton.title = 'Voice search not supported';
+            speechFeedback.textContent = 'Voice search not supported in this browser.';
+            speechFeedback.style.color = 'orange';
+        }
+
+        // --- Three.js 3D Background Falling Animation ---
+        let scene, camera, renderer;
+        const fallingObjects = [];
+        const numberOfObjects = 60; // Increased number of objects for a fuller effect
+        let mouseX = 0, mouseY = 0;
+        let windowHalfX = window.innerWidth / 2;
+        let windowHalfY = window.innerHeight / 2;
+
+        function init3D() {
+            const canvas = document.getElementById('threeJsCanvas');
+
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f8ff); // Light background color
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                75, // Field of view
+                window.innerWidth / window.innerHeight, // Aspect ratio
+                0.1, // Near clipping plane
+                200 // Far clipping plane (increased for depth)
+            );
+            camera.position.z = 15; // Position camera further back
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Lights
+            // Ambient light provides uniform illumination to all objects in the scene.
+            const ambientLight = new THREE.AmbientLight(0x404040, 1); // Increased intensity to make balls "light visible"
+            scene.add(ambientLight);
+
+            // No directional or point lights needed as MeshBasicMaterial does not react to lighting,
+            // and the "light visible" effect comes from the material's inherent brightness and ambient light.
+
+            // Create falling 3D objects (uniform spheres)
+            for (let i = 0; i < numberOfObjects; i++) {
+                // Decreased base size to 0.5 and target scale range
+                const geometry = new THREE.SphereGeometry(0.5, 16, 16); // Base size 0.5, will scale
+                const material = new THREE.MeshBasicMaterial({
+                    color: new THREE.Color(Math.random(), Math.random(), Math.random()), // Random light colors
+                    transparent: true,
+                    opacity: 0 // Start invisible
+                });
+
+                const mesh = new THREE.Mesh(geometry, material);
+                // Store properties for each object
+                const obj = {
+                    mesh: mesh,
+                    speed: getRandomArbitrary(0.05, 0.2),
+                    rotationSpeed: {
+                        x: getRandomArbitrary(0.005, 0.02),
+                        y: getRandomArbitrary(0.005, 0.02),
+                        z: getRandomArbitrary(0.005, 0.02)
+                    },
+                    driftSpeedX: getRandomArbitrary(-0.02, 0.02), // Horizontal drift
+                    driftSpeedZ: getRandomArbitrary(-0.01, 0.01), // Z-axis drift for subtle depth shift
+                    currentOpacity: 0,
+                    targetOpacity: getRandomArbitrary(0.6, 1.0), // Target opacity
+                    currentScale: 0.05, // Start smaller
+                    targetScale: getRandomArbitrary(0.2, 0.8), // Target scale for smaller balls
+                    lifetime: getRandomArbitrary(500, 1000) // How many frames before it starts fading out
+                };
+                resetObjectPosition(obj); // Set initial random position
+                scene.add(mesh);
+                fallingObjects.push(obj);
+            }
+
+            // Event Listeners for mouse/touch control and resizing
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+            document.addEventListener('touchmove', onDocumentTouchMove, { passive: false });
+            document.addEventListener('touchstart', onDocumentTouchStart, { passive: false });
+            document.addEventListener('touchend', () => { isTouching = false; });
+        }
+
+        // Resets object position and properties for a new fall cycle
+        function resetObjectPosition(obj) {
+            obj.mesh.position.x = getRandomArbitrary(-20, 20); // Wider X range
+            obj.mesh.position.y = getRandomArbitrary(20, 40); // Start further above screen
+            obj.mesh.position.z = getRandomArbitrary(-30, 0); // Z-depth for perspective
+
+            obj.mesh.rotation.x = Math.random() * Math.PI * 2;
+            obj.mesh.rotation.y = Math.random() * Math.PI * 2;
+            obj.mesh.rotation.z = Math.random() * Math.PI * 2;
+
+            obj.speed = getRandomArbitrary(0.05, 0.2); // Random falling speed
+            obj.rotationSpeed = { // Re-randomize rotation speed
+                x: getRandomArbitrary(0.005, 0.02),
+                y: getRandomArbitrary(0.005, 0.02),
+                z: getRandomArbitrary(0.005, 0.02)
+            };
+            obj.driftSpeedX = getRandomArbitrary(-0.02, 0.02); // Re-randomize drift
+            obj.driftSpeedZ = getRandomArbitrary(-0.01, 0.01);
+
+            obj.currentOpacity = 0; // Start invisible
+            obj.targetOpacity = getRandomArbitrary(0.6, 1.0); // New target opacity
+            obj.currentScale = 0.05; // Start smaller
+            obj.targetScale = getRandomArbitrary(0.2, 0.8); // New target scale for smaller balls
+            obj.mesh.material.color.setRGB(Math.random(), Math.random(), Math.random()); // New random color
+        }
+
+        function getRandomArbitrary(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            windowHalfX = window.innerWidth / 2;
+            windowHalfY = window.innerHeight / 2;
+        }
+
+        function onDocumentMouseMove(event) {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        }
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isTouching = false;
+
+        function onDocumentTouchStart(event) {
+            if (event.touches.length === 1) {
+                touchStartX = event.touches[0].pageX;
+                touchStartY = event.touches[0].pageY;
+                isTouching = true;
+            }
+        }
+
+        function onDocumentTouchMove(event) {
+            if (isTouching && event.touches.length === 1) {
+                event.preventDefault(); // Prevent scrolling when dragging on canvas
+                const touchX = event.touches[0].pageX;
+                const touchY = event.touches[0].pageY;
+
+                mouseX = (touchX - touchStartX) * 2; // Exaggerate touch movement slightly
+                mouseY = (touchY - touchStartY) * 2;
+            }
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D); // Loop the animation
+
+            // Update and rotate falling objects
+            fallingObjects.forEach(obj => {
+                // Apply falling and drift
+                obj.mesh.position.y -= obj.speed;
+                obj.mesh.position.x += obj.driftSpeedX;
+                obj.mesh.position.z += obj.driftSpeedZ; // Subtle Z drift
+
+                // Apply rotation
+                obj.mesh.rotation.x += obj.rotationSpeed.x;
+                obj.mesh.rotation.y += obj.rotationSpeed.y;
+                obj.mesh.rotation.z += obj.rotationSpeed.z;
+
+                // Animate opacity and scale (fade in then fade out/grow then shrink)
+                const normalizedY = (obj.mesh.position.y - (-camera.position.y - 10)) / ( (20 + 40) - (-camera.position.y - 10) ); // Normalize Y position [0, 1]
+                // Fade in as they start falling
+                if (obj.mesh.position.y > (camera.position.y / 2)) {
+                    obj.currentOpacity = Math.min(obj.targetOpacity, obj.currentOpacity + 0.01);
+                    obj.currentScale = Math.min(obj.targetScale, obj.currentScale + 0.01);
+                } else if (obj.mesh.position.y < (-camera.position.y / 2)) { // Fade out as they get close to bottom
+                     obj.currentOpacity = Math.max(0, obj.currentOpacity - 0.01);
+                     obj.currentScale = Math.max(0.05, obj.currentScale - 0.01); // Ensure it doesn't shrink too much
+                } else {
+                    obj.currentOpacity = obj.targetOpacity; // Keep at target in middle
+                    obj.currentScale = obj.targetScale;
+                }
+
+                obj.mesh.material.opacity = obj.currentOpacity;
+                obj.mesh.scale.set(obj.currentScale, obj.currentScale, obj.currentScale);
+
+
+                // If object falls below the view, reset its position to the top
+                if (obj.mesh.position.y < -camera.position.y - 10) { // Adjusted threshold for bottom of screen
+                    resetObjectPosition(obj); // Pass the object itself to reset its properties
+                }
+            });
+
+            // Move camera based on mouse/touch position for subtle parallax
+            camera.position.x += (mouseX / 200 - camera.position.x) * 0.03;
+            camera.position.y += (-mouseY / 200 - camera.position.y) * 0.03;
+            camera.lookAt(scene.position); // Always look at the center of the scene
+
+            renderer.render(scene, camera); // Render the scene
+        }
+
+    </script>
+</body>
+</html>

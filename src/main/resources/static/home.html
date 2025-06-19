@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartTrends - Premium Shopping Experience</title>
+    <!-- Google Fonts - Inter for consistency, though 'Segoe UI', 'Roboto' are in provided CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js CDN for 3D animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+      /* Color Variables */
+      :root {
+        --primary: #222; /* Dark Charcoal */
+        --primary-dark: #111;
+        --secondary: #e91e63; /* Vibrant Pink */
+        --accent: #00bcd4; /* Cyan Accent */
+        --light: #ffffff;
+        --gray: #f4f4f4; /* Light Gray Background */
+        --dark-gray: #777;
+        --success: #4caf50;
+      }
+
+      /* General styles */
+      body {
+        font-family: 'Segoe UI', 'Roboto', sans-serif; /* Retained original font */
+        margin: 0;
+        padding: 0;
+        color: var(--primary);
+        background-color: var(--white);
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        grid-template-areas:
+          "header"
+          "main"
+          "footer";
+        overflow-x: hidden; /* Prevent horizontal scroll from 3D canvas */
+      }
+
+      /* 3D Canvas Styles */
+      #threeJsCanvas {
+          position: fixed; /* Fixed position to cover the background */
+          top: 0;
+          left: 0;
+          width: 100vw; /* Full viewport width */
+          height: 100vh; /* Full viewport height */
+          z-index: -1; /* Place behind all other content */
+          display: block; /* Ensure it's a block element */
+          background-color: transparent; /* Allows main body background to show through initially */
+      }
+
+      /* Ensure content layers are above the 3D background */
+      header, main, footer { /* Apply z-index to major content containers */
+          position: relative;
+          z-index: 1;
+      }
+
+      /* Adjust background of main content for transparency over 3D canvas */
+      main {
+        background-color: white; /* var(--gray) with transparency */
+      }
+
+      /* Header */
+      header {
+        grid-area: header;
+        background-color: var(--primary); /* Dark Charcoal Header */
+        padding: 15px 5%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .logo {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--light);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        letter-spacing: 0.5px;
+      }
+
+      .logo img {
+        height: 35px;
+        margin-right: 10px;
+      }
+
+      nav {
+        display: flex;
+        gap: 2rem;
+      }
+
+      nav a {
+        color: var(--light);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1.1rem;
+        transition: color 0.3s ease;
+        padding: 10px 0;
+        position: relative;
+      }
+
+      nav a:hover {
+        color: var(--accent);
+      }
+
+      nav a.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--accent);
+      }
+
+      /* Main Content Area */
+      main {
+        grid-area: main;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+
+      /* Hero Section */
+      .hero {
+        background:
+          linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.3)),
+          url('https://images.unsplash.com/photo-1462143338528-eca9936a4d09?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') no-repeat center center/cover; /* Changed background image */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--light);
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* Text Animations */
+      @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-30px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+
+      .animate-text-heading {
+        animation: fadeInDown 1s ease-out forwards;
+        opacity: 0; /* Start hidden */
+      }
+
+      .animate-text-paragraph {
+        animation: fadeIn 1.5s ease-out forwards;
+        animation-delay: 0.3s;
+        opacity: 0; /* Start hidden */
+      }
+
+      .animate-search-bar {
+        animation: fadeInUp 1s ease-out forwards;
+        animation-delay: 0.6s;
+        opacity: 0; /* Start hidden */
+      }
+
+      .animate-cta-button {
+        animation: fadeInUp 1s ease-out forwards;
+        animation-delay: 0.9s;
+        opacity: 0; /* Start hidden */
+      }
+
+
+      .hero h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 30px;
+        letter-spacing: 1px;
+      }
+
+      .hero p {
+        font-size: 1.5rem;
+        margin-bottom: 50px;
+        max-width: 900px;
+        line-height: 1.7;
+      }
+
+      .cta-button {
+        padding: 18px 40px;
+        background-color: var(--secondary);
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        margin-top: 20px;
+      }
+
+      .cta-button:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Search Container - Now within Hero */
+      .search-container {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        max-width: 700px;
+        margin-top: 30px;
+        padding: 0 20px;
+        box-sizing: border-box;
+      }
+
+      .search-wrapper {
+        display: flex;
+        width: 100%;
+        padding: 10px;
+        height: 50px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 5px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      #searchInput {
+        flex-grow: 1;
+        padding: 12px 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px 0 0 5px;
+        font-size: 16px;
+        outline: none;
+        color: var(--primary);
+        background-color: var(--light);
+      }
+
+      .search-wrapper button {
+        padding: 0 25px;
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 0 5px 5px 0;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+      }
+
+      .search-wrapper button:hover {
+        background-color: #008ba7;
+      }
+
+      /* Category Grid - now a child of main */
+      .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 30px 5%;
+        background-color: var(--light);
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .category-card {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        height: 200px;
+        position: relative;
+      }
+
+      .category-card:hover {
+        transform: scale(1.03);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .category-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: opacity 0.2s ease-in-out;
+      }
+
+      .category-card img:hover {
+        opacity: 0.95;
+      }
+
+      .category-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
+        padding: 12px;
+        color: white;
+        text-align: center;
+      }
+
+      .category-overlay h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+      }
+
+      /* Watches Section (if you add content here, it should also be within main) */
+      .watches-section {
+        padding: 40px 5%;
+        background-color: var(--light);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 0;
+      }
+
+      .watch-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        background-color: white;
+      }
+
+      .watch-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+      }
+
+      .watch-card img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+      }
+
+      .watch-details {
+        padding: 20px;
+        text-align: center;
+      }
+
+      .watch-details h4 {
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-size: 1.2rem;
+        color: var(--primary);
+        font-weight: 600;
+      }
+
+      .watch-details p {
+        font-size: 1rem;
+        color: var(--dark-gray);
+        margin-bottom: 15px;
+        line-height: 1.6;
+      }
+
+      .watch-details .price {
+        font-weight: bold;
+        color: var(--secondary);
+        font-size: 1.1rem;
+      }
+
+      /* Footer */
+      footer {
+        grid-area: footer;
+        background-color: var(--primary);
+        color: var(--light);
+        text-align: center;
+        padding: 25px;
+        font-size: 1rem;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        header {
+          flex-direction: column;
+          gap: 15px;
+          padding: 15px 5%;
+        }
+
+        nav {
+          width: 100%;
+          justify-content: center;
+          gap: 1.5rem;
+        }
+
+        .category-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 15px;
+          padding: 20px 5%;
+        }
+
+        .watches-section {
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 20px;
+          padding: 30px 5%;
+        }
+
+        .hero h1 {
+          font-size: 2.8rem;
+          margin-bottom: 20px;
+        }
+
+        .hero p {
+          font-size: 1.2rem;
+          margin-bottom: 30px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .category-grid {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 15px 5%;
+        }
+
+        .watches-section {
+          grid-template-columns: 1fr;
+          gap: 15px;
+          padding: 20px 5%;
+        }
+
+        .hero h1 {
+          font-size: 2.4rem;
+          margin-bottom: 15px;
+        }
+
+        .hero p {
+          font-size: 1rem;
+          margin-bottom: 25px;
+        }
+      }
+    </style>
+
+    </head>
+    <body>
+
+        <!-- 3D Canvas will be rendered here -->
+        <canvas id="threeJsCanvas"></canvas>
+
+      <header>
+        <a href="home.html" class="logo">
+          <img src="https://template.canva.com/EAE3xvLG3f0/1/0/1600w-t7t958DYPEk.jpg" alt="Smart Trends New Logo">
+          Smart Trends
+        </a>
+        <nav>
+          <a href="login.html">Login</a>
+          <a href="register.html">Register</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero">
+            <h1 class="animate-text-heading">Discover the Best Deals!</h1>
+            <p class="animate-text-paragraph">Explore a wide range of products, from the latest gadgets to trendy fashion, all at incredible prices. Enjoy a seamless shopping experience with fast delivery and easy returns.</p>
+
+            <div class="search-container animate-search-bar">
+              <div class="search-wrapper">
+                <input type="text" id="searchInput" placeholder="Search for products, brands and more...">
+                <button id="searchButton">Search
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M21 21L16.65 16.65" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <a href="login.html" class="cta-button animate-cta-button">Start Exploring</a>
+        </section>
+
+        <div class="category-grid">
+          <div class="category-card" onclick="window.location.href='register.html#groceries';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Groceries">
+            <div class="category-overlay">
+              <h3>Groceries</h3>
+            </div>
+          </div>
+
+          <div class="category-card" onclick="window.location.href='register.html#electronics';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Electronics">
+            <div class="category-overlay">
+              <h3>Electronics</h3>
+            </div>
+          </div>
+
+          <div class="category-card" onclick="window.location.href='register.html#bags';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Beauty">
+            <div class="category-overlay">
+              <h3>Bags</h3>
+            </div>
+          </div>
+
+          <div class="category-card" onclick="window.location.href='register.html#fashion';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Fashion">
+            <div class="category-overlay">
+              <h3>Fashion</h3>
+            </div>
+          </div>
+
+          <div class="category-card" onclick="window.location.href='register.html#sports';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Sports">
+            <div class="category-overlay">
+              <h3>Sports</h3>
+            </div>
+          </div>
+
+          <div class="category-card" onclick="window.location.href='register.html#home-kitchen';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1606787366850-de6330128bfc?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Home & Kitchen">
+            <div class="category-overlay">
+              <h3>Home & Kitchen</h3>
+            </div>
+          </div>
+
+          <div class="category-card" onclick="window.location.href='register.html#furniture';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Furniture">
+            <div class="category-overlay">
+              <h3>Furniture</h3>
+            </div>
+          </div>
+
+          <div class="category-card" onclick="window.location.href='register.html#perfumes';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Perfumes">
+            <div class="category-overlay">
+              <h3>Perfumes</h3>
+            </div>
+          </div>
+
+          <div class="category-card" onclick="window.location.href='register.html#toys';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Toys">
+            <div class="category-overlay">
+              <h3>Toys</h3>
+            </div>
+          </div>
+
+          <div class="category-card" onclick="window.location.href='register.html#watches';" style="cursor: pointer;">
+            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Watches">
+            <div class="category-overlay">
+              <h3>Watches</h3>
+            </div>
+          </div>
+
+  </div>
+
+      </main>
+
+	    <footer>
+	      &copy; 2025 Smart Trends. All rights reserved.
+	    </footer>
+
+    <script>
+        // Dummy data for product quantities (not used in this home.html, but kept for context if this becomes a product display page later)
+        let allProducts = [];
+        const userId = localStorage.getItem("userId");
+        const userEmail = localStorage.getItem("userEmail");
+
+        // --- Three.js 3D Background Falling Animation ---
+        let scene, camera, renderer;
+        const fallingObjects = [];
+        const numberOfObjects = 100; // Increased number of objects for a fuller effect
+        let mouseX = 0, mouseY = 0;
+        let windowHalfX = window.innerWidth / 2;
+        let windowHalfY = window.innerHeight / 2;
+
+        window.onload = function () {
+            // Initialize and animate 3D scene after window loads
+            init3D();
+            animate3D();
+        };
+
+        // Function to generate a random pastel color
+        function getRandomPastelColor() {
+            // Generate random hue (0-360), low saturation (e.g., 20-50%), high lightness (e.g., 70-90%)
+            const hue = Math.random() * 360;
+            const saturation = getRandomArbitrary(0.2, 0.5); // 20% to 50% saturation
+            const lightness = getRandomArbitrary(0.7, 0.9); // 70% to 90% lightness
+            const color = new THREE.Color().setHSL(hue / 360, saturation, lightness);
+            return color;
+        }
+
+
+        function init3D() {
+            const canvas = document.getElementById('threeJsCanvas');
+
+            // Scene
+            scene = new THREE.Scene();
+
+            // Load a new background image texture for the 3D scene
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(
+                'https://images.unsplash.com/photo-1628383279328-98e6c46927d3?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', // New image URL
+                function (texture) {
+                    scene.background = texture;
+                },
+                undefined,
+                function (err) {
+                    console.error('An error occurred loading the background texture:', err);
+                    scene.background = new THREE.Color(0xf0f8ff); // Fallback color if image fails
+                }
+            );
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                75, // Field of view
+                window.innerWidth / window.innerHeight, // Aspect ratio
+                0.1, // Near clipping plane
+                200 // Far clipping plane (increased for depth)
+            );
+            camera.position.z = 15; // Position camera further back
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Lights
+            // Ambient light provides uniform illumination to all objects in the scene.
+            const ambientLight = new THREE.AmbientLight(0x404040, 1); // Increased intensity to make balls "light visible"
+            scene.add(ambientLight);
+
+            // Create falling 3D objects (uniform spheres)
+            for (let i = 0; i < numberOfObjects; i++) {
+                // Decreased base size to 0.15 and target scale range for even smaller balls
+                const geometry = new THREE.SphereGeometry(0.15, 16, 16); // Base size 0.15, will scale
+                const material = new THREE.MeshBasicMaterial({
+                    color: getRandomPastelColor(), // Use pastel colors
+                    transparent: true,
+                    opacity: 0 // Start invisible
+                });
+
+                const mesh = new THREE.Mesh(geometry, material);
+                // Store properties for each object
+                const obj = {
+                    mesh: mesh,
+                    speed: getRandomArbitrary(0.05, 0.2),
+                    rotationSpeed: {
+                        x: getRandomArbitrary(0.005, 0.02),
+                        y: getRandomArbitrary(0.005, 0.02),
+                        z: getRandomArbitrary(0.005, 0.02)
+                    },
+                    driftSpeedX: getRandomArbitrary(-0.02, 0.02), // Horizontal drift
+                    driftSpeedZ: getRandomArbitrary(-0.01, 0.01), // Z-axis drift for subtle depth shift
+                    currentOpacity: 0,
+                    targetOpacity: getRandomArbitrary(0.4, 0.8), // Slightly reduced target opacity for softer look
+                    currentScale: 0.005, // Start very very small
+                    targetScale: getRandomArbitrary(0.03, 0.15), // New target scale for very small balls
+                    lifetime: getRandomArbitrary(500, 1000) // How many frames before it starts fading out
+                };
+                resetObjectPosition(obj); // Set initial random position
+                scene.add(mesh);
+                fallingObjects.push(obj);
+            }
+
+            // Event Listeners for mouse/touch control and resizing
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+            document.addEventListener('touchmove', onDocumentTouchMove, { passive: false });
+            document.addEventListener('touchstart', onDocumentTouchStart, { passive: false });
+            document.addEventListener('touchend', () => { isTouching = false; });
+        }
+
+        // Resets object position and properties for a new fall cycle
+        function resetObjectPosition(obj) {
+            obj.mesh.position.x = getRandomArbitrary(-20, 20); // Wider X range
+            obj.mesh.position.y = getRandomArbitrary(20, 40); // Start further above screen
+            obj.mesh.position.z = getRandomArbitrary(-30, 0); // Z-depth for perspective
+
+            obj.mesh.rotation.x = Math.random() * Math.PI * 2;
+            obj.mesh.rotation.y = Math.random() * Math.PI * 2;
+            obj.mesh.rotation.z = Math.random() * Math.PI * 2;
+
+            obj.speed = getRandomArbitrary(0.05, 0.2); // Random falling speed
+            obj.rotationSpeed = { // Re-randomize rotation speed
+                x: getRandomArbitrary(0.005, 0.02),
+                y: getRandomArbitrary(0.005, 0.02),
+                z: getRandomArbitrary(0.005, 0.02)
+            };
+            obj.driftSpeedX = getRandomArbitrary(-0.02, 0.02); // Re-randomize drift
+            obj.driftSpeedZ = getRandomArbitrary(-0.01, 0.01);
+
+            obj.currentOpacity = 0; // Start invisible
+            obj.targetOpacity = getRandomArbitrary(0.4, 0.8); // New target opacity for softer look
+            obj.currentScale = 0.005; // Start very very small
+            obj.targetScale = getRandomArbitrary(0.03, 0.15); // New target scale for very small balls
+            obj.mesh.material.color.set(getRandomPastelColor()); // New random pastel color
+        }
+
+        function getRandomArbitrary(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            windowHalfX = window.innerWidth / 2;
+            windowHalfY = window.innerHeight / 2;
+        }
+
+        function onDocumentMouseMove(event) {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        }
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isTouching = false;
+
+        function onDocumentTouchStart(event) {
+            if (event.touches.length === 1) {
+                touchStartX = event.touches[0].pageX;
+                touchStartY = event.touches[0].pageY;
+                isTouching = true;
+            }
+        }
+
+        function onDocumentTouchMove(event) {
+            if (isTouching && event.touches.length === 1) {
+                event.preventDefault(); // Prevent scrolling when dragging on canvas
+                const touchX = event.touches[0].pageX;
+                const touchY = event.touches[0].pageY;
+
+                mouseX = (touchX - touchStartX) * 2; // Exaggerate touch movement slightly
+                mouseY = (touchY - touchStartY) * 2;
+            }
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D); // Loop the animation
+
+            // Update and rotate falling objects
+            fallingObjects.forEach(obj => {
+                // Apply falling and drift
+                obj.mesh.position.y -= obj.speed;
+                obj.mesh.position.x += obj.driftSpeedX;
+                obj.mesh.position.z += obj.driftSpeedZ; // Subtle Z drift
+
+                // Apply rotation
+                obj.mesh.rotation.x += obj.rotationSpeed.x;
+                obj.mesh.rotation.y += obj.rotationSpeed.y;
+                obj.mesh.rotation.z += obj.rotationSpeed.z;
+
+                // Animate opacity and scale (fade in then fade out/grow then shrink)
+                const normalizedY = (obj.mesh.position.y - (-camera.position.y - 10)) / ( (20 + 40) - (-camera.position.y - 10) ); // Normalize Y position [0, 1]
+                // Fade in as they start falling
+                if (obj.mesh.position.y > (camera.position.y / 2)) {
+                    obj.currentOpacity = Math.min(obj.targetOpacity, obj.currentOpacity + 0.01);
+                    obj.currentScale = Math.min(obj.targetScale, obj.currentScale + 0.01);
+                } else if (obj.mesh.position.y < (-camera.position.y / 2)) { // Fade out as they get close to bottom
+                     obj.currentOpacity = Math.max(0, obj.currentOpacity - 0.01);
+                     obj.currentScale = Math.max(0.005, obj.currentScale - 0.01); // Ensure it doesn't shrink too much
+                } else {
+                    obj.currentOpacity = obj.targetOpacity; // Keep at target in middle
+                    obj.currentScale = obj.targetScale;
+                }
+
+                obj.mesh.material.opacity = obj.currentOpacity;
+                obj.mesh.scale.set(obj.currentScale, obj.currentScale, obj.currentScale);
+
+
+                // If object falls below the view, reset its position to the top
+                if (obj.mesh.position.y < -camera.position.y - 10) { // Adjusted threshold for bottom of screen
+                    resetObjectPosition(obj); // Pass the object itself to reset its properties
+                }
+            });
+
+            // Move camera based on mouse/touch position for subtle parallax
+            camera.position.x += (mouseX / 200 - camera.position.x) * 0.03;
+            camera.position.y += (-mouseY / 200 - camera.position.y) * 0.03;
+            camera.lookAt(scene.position); // Always look at the center of the scene
+
+            renderer.render(scene, camera); // Render the scene
+        }
+
+        // Dummy search functionality for the landing page hero section
+        document.getElementById('searchButton').addEventListener('click', () => {
+            const query = document.getElementById('searchInput').value;
+            // In a real application, this would redirect to a search results page
+            // For now, we'll just log it or give a placeholder message.
+            alert(`Searching for: ${query}. (In a full app, this would take you to product listings!)`);
+        });
+
+        // Event listener for the "Start Exploring" CTA button
+        document.querySelector('.cta-button').addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent default link behavior
+            // Simulate navigation to a login page, or directly to products if no login needed
+            alert('Redirecting to Login/Product page...');
+            window.location.href = 'login.html'; // Or 'home.html' if that's the product page
+        });
+
+
+    </script>
+    </body>
+</html>
