@@ -215,7 +215,7 @@
 
         // Store in localStorage
         localStorage.setItem("userId", userId);
-        localStorage.setItem("userEmail", email); // changed key to match index.html
+        localStorage.setItem("userEmail", email); // changed key to match Products.html
         localStorage.setItem("role", role);
 		localStorage.setItem("name", name);
 
@@ -223,7 +223,7 @@
         if (role === 'ADMIN') {
           window.location.href = 'addproduct.html';
         } else if (role === 'CUSTOMER') {
-          window.location.href = 'index.html';
+          window.location.href = 'Products.html';
         } else {
           alert('Unknown role');
         }
